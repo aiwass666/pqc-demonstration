@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conceptual Quantum-Resistant Cryptography (PQC) Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better visual appeal */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .section-title {
+            font-size: 1.75rem; /* Larger title */
+            font-weight: 700;
+            color: #2c3e50; /* Darker text for titles */
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .card {
+            background-color: #ecf0f1; /* Lighter gray for cards */
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .button-primary {
+            background-color: #3498db; /* Blue button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button-primary:hover {
+            background-color: #2980b9; /* Darker blue on hover */
+            transform: translateY(-2px);
+        }
+        .button-secondary {
+            background-color: #95a5a6; /* Gray button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button-secondary:hover {
+            background-color: #7f8c8d; /* Darker gray on hover */
+            transform: translateY(-2px);
+        }
+        .result-message {
+            font-weight: 600;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .result-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .result-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .result-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .flex-row-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        .input-field, .textarea-field {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #bdc3c7;
+            width: 100%;
+        }
+        .output-box {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 50px;
+            overflow-x: auto; /* Allow horizontal scrolling for long keys */
+            font-family: 'monospace';
+            word-break: break-all; /* Break long words */
+            font-size: 0.875rem; /* Smaller font for long outputs */
+        }
+        .label {
+            font-weight: 500;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="section-title">Conceptual Quantum-Resistant Cryptography (PQC) Demo</h1>
+        <p class="text-center text-gray-700 mb-4">
+            This demo illustrates the **workflow** of two types of PQC algorithms: a Key Encapsulation Mechanism (KEM) and a Digital Signature Scheme.
+            <br>
+            **Important:** This uses simplified, non-cryptographic operations for demonstration purposes only. It is **NOT** cryptographically secure and should **NEVER** be used for real-world applications.
+        </p>
+
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3">1. Key Encapsulation Mechanism (KEM) - For Confidentiality</h2>
+            <p class="text-gray-600 mb-4">
+                KEMs are used to securely establish a shared secret key between two parties (Alice and Bob) over an insecure channel, even if an attacker has a quantum computer.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Alice's Side (KEM)</h3>
+                    <div class="flex-row-center mb-4">
+                        <button id="generateKemKeysBtn" class="button-primary">Generate Alice's KEM Keys</button>
+                    </div>
+                    <label class="label">Alice's Public Key (PK_A):</label>
+                    <div id="aliceKemPublicKey" class="output-box mb-2"></div>
+                    <label class="label">Alice's Private Key (SK_A):</label>
+                    <div id="aliceKemPrivateKey" class="output-box mb-4"></div>
+                    <label class="label">Alice's Decapsulated Session Key:</label>
+                    <div id="aliceDecapsulatedKey" class="output-box"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Bob's Side (KEM)</h3>
+                    <div class="flex-row-center mb-4">
+                        <button id="encapsulateKeyBtn" class="button-primary">Bob Encapsulate Key</button>
+                    </div>
+                    <label class="label">Bob's Generated Session Key:</label>
+                    <div id="bobGeneratedKey" class="output-box mb-2"></div>
+                    <label class="label">Ciphertext (sent to Alice):</label>
+                    <div id="kemCiphertext" class="output-box mb-4"></div>
+                    <div class="flex-row-center">
+                        <button id="decapsulateKeyBtn" class="button-secondary">Alice Decapsulate Key</button>
+                    </div>
+                </div>
+            </div>
+            <div id="kemResultMessage" class="result-message mt-4 hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3">2. Digital Signature Scheme - For Authenticity & Integrity</h2>
+            <p class="text-gray-600 mb-4">
+                Digital signatures are used to verify the authenticity and integrity of a message. Alice signs a message with her private key, and anyone can verify the signature using her public key.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Alice's Side (Signature)</h3>
+                    <div class="flex-row-center mb-4">
+                        <button id="generateSigKeysBtn" class="button-primary">Generate Alice's Signature Keys</button>
+                    </div>
+                    <label class="label">Alice's Public Key (PK_Sig_A):</label>
+                    <div id="aliceSigPublicKey" class="output-box mb-2"></div>
+                    <label class="label">Alice's Private Key (SK_Sig_A):</label>
+                    <div id="aliceSigPrivateKey" class="output-box mb-4"></div>
+                    <label for="messageToSign" class="label">Message to Sign:</label>
+                    <textarea id="messageToSign" class="textarea-field mb-4" rows="3" placeholder="Enter message Alice wants to sign..."></textarea>
+                    <div class="flex-row-center">
+                        <button id="signMessageBtn" class="button-primary">Alice Sign Message</button>
+                    </div>
+                    <label class="label mt-4">Generated Signature:</label>
+                    <div id="generatedSignature" class="output-box"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Bob's Side (Verification)</h3>
+                    <div class="flex-row-center mb-4">
+                        <button id="copySigKeysBtn" class="button-secondary">Copy Alice's Sig Public Key to Bob</button>
+                    </div>
+                    <label class="label">Alice's Public Key (PK_Sig_A) for Bob:</label>
+                    <div id="bobSigPublicKey" class="output-box mb-2"></div>
+                    <label for="messageToVerify" class="label">Message to Verify:</label>
+                    <textarea id="messageToVerify" class="textarea-field mb-2" rows="3"></textarea>
+                    <label for="signatureToVerify" class="label">Signature to Verify:</label>
+                    <textarea id="signatureToVerify" class="textarea-field mb-4" rows="2"></textarea>
+                    <div class="flex-row-center">
+                        <button id="verifySignatureBtn" class="button-primary">Bob Verify Signature</button>
+                    </div>
+                </div>
+            </div>
+            <div id="sigResultMessage" class="result-message mt-4 hidden"></div>
+        </div>
+    </div>
+
+    <script>
+      // PQC Demonstration by Aiwass666 (https://github.com/aiwass666). Only for demonstration purposes.  
+      // Helper to generate a simple "key" string (not cryptographically secure)
+        function generateSimpleKey(length = 32) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
+        // Helper to simulate a hash (not cryptographically secure)
+        // For demo purposes, a simple sum of char codes.
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = (hash << 5) - hash + str.charCodeAt(i);
+                hash |= 0; // Convert to 32bit integer
+            }
+            return Math.abs(hash).toString(16); // Convert to hex string
+        }
+
+        // Helper to display messages
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `result-message mt-4 ${type}`;
+            element.classList.remove('hidden');
+        }
+
+        // --- KEM (Key Encapsulation Mechanism) Logic ---
+        let kemAlicePk = '';
+        let kemAliceSk = '';
+        let kemBobSessionKey = '';
+        let kemCiphertext = '';
+
+        const generateKemKeysBtn = document.getElementById('generateKemKeysBtn');
+        const aliceKemPublicKeyDiv = document.getElementById('aliceKemPublicKey');
+        const aliceKemPrivateKeyDiv = document.getElementById('aliceKemPrivateKey');
+        const bobGeneratedKeyDiv = document.getElementById('bobGeneratedKey');
+        const encapsulateKeyBtn = document.getElementById('encapsulateKeyBtn');
+        const kemCiphertextDiv = document.getElementById('kemCiphertext');
+        const decapsulateKeyBtn = document.getElementById('decapsulateKeyBtn');
+        const aliceDecapsulatedKeyDiv = document.getElementById('aliceDecapsulatedKey');
+        const kemResultMessageDiv = document.getElementById('kemResultMessage');
+
+        generateKemKeysBtn.addEventListener('click', () => {
+            kemAlicePk = generateSimpleKey(64); // Alice's Public Key
+            kemAliceSk = generateSimpleKey(64); // Alice's Private Key (unrelated for demo simplicity)
+
+            aliceKemPublicKeyDiv.textContent = kemAlicePk;
+            aliceKemPrivateKeyDiv.textContent = kemAliceSk;
+            bobGeneratedKeyDiv.textContent = '';
+            kemCiphertextDiv.textContent = '';
+            aliceDecapsulatedKeyDiv.textContent = '';
+            kemResultMessageDiv.classList.add('hidden');
+
+            showMessage(kemResultMessageDiv, "Alice's KEM keys generated. Public key is ready to be shared.", "result-success");
+        });
+
+        encapsulateKeyBtn.addEventListener('click', () => {
+            if (!kemAlicePk) {
+                showMessage(kemResultMessageDiv, "Please generate Alice's KEM keys first.", "result-warning");
+                return;
+            }
+
+            // Bob generates a random session key
+            kemBobSessionKey = generateSimpleKey(32);
+            bobGeneratedKeyDiv.textContent = kemBobSessionKey;
+
+            // Bob "encapsulates" the session key using Alice's public key
+            // (Simplified: concatenates Bob's key with Alice's public key)
+            kemCiphertext = simpleHash(kemBobSessionKey + kemAlicePk); // Simulating a complex encapsulation process
+
+            kemCiphertextDiv.textContent = kemCiphertext;
+            aliceDecapsulatedKeyDiv.textContent = ''; // Clear previous decapsulated key
+
+            showMessage(kemResultMessageDiv, "Bob has encapsulated a session key using Alice's public key. Ciphertext sent to Alice.", "result-success");
+        });
+
+        decapsulateKeyBtn.addEventListener('click', () => {
+            if (!kemCiphertext || !kemAliceSk) {
+                showMessage(kemResultMessageDiv, "Please generate Alice's KEM keys and have Bob encapsulate a key first.", "result-warning");
+                return;
+            }
+
+            // Alice "decapsulates" the ciphertext using her private key
+            // (Simplified: Alice needs to derive the session key. For this demo, we'll just check if it matches Bob's)
+            // In a real KEM, Alice would use SK_A to derive the *same* session key Bob generated.
+            // Here, we simulate success if the "decapsulated" key matches Bob's.
+            let aliceDerivedKey = simpleHash(kemBobSessionKey + kemAlicePk); // Alice re-derives based on her knowledge
+
+            if (aliceDerivedKey === kemCiphertext) { // If the derived value matches the sent ciphertext (simplified success)
+                 aliceDecapsulatedKeyDiv.textContent = kemBobSessionKey; // Alice successfully decapsulated Bob's key
+                 showMessage(kemResultMessageDiv, `KEM Success! Alice and Bob share the same session key: ${kemBobSessionKey}`, "result-success");
+            } else {
+                 aliceDecapsulatedKeyDiv.textContent = "Decapsulation failed or keys don't match.";
+                 showMessage(kemResultMessageDiv, "KEM Failed! Decapsulation did not yield the correct session key. (Simulated error)", "result-error");
+            }
+        });
+
+        // --- Digital Signature Scheme Logic ---
+        let sigAlicePk = '';
+        let sigAliceSk = '';
+        let currentSignature = '';
+
+        const generateSigKeysBtn = document.getElementById('generateSigKeysBtn');
+        const aliceSigPublicKeyDiv = document.getElementById('aliceSigPublicKey');
+        const aliceSigPrivateKeyDiv = document.getElementById('aliceSigPrivateKey');
+        const messageToSignInput = document.getElementById('messageToSign');
+        const signMessageBtn = document.getElementById('signMessageBtn');
+        const generatedSignatureDiv = document.getElementById('generatedSignature');
+        const copySigKeysBtn = document.getElementById('copySigKeysBtn');
+        const bobSigPublicKeyDiv = document.getElementById('bobSigPublicKey');
+        const messageToVerifyInput = document.getElementById('messageToVerify');
+        const signatureToVerifyInput = document.getElementById('signatureToVerify');
+        const verifySignatureBtn = document.getElementById('verifySignatureBtn');
+        const sigResultMessageDiv = document.getElementById('sigResultMessage');
+
+        generateSigKeysBtn.addEventListener('click', () => {
+            sigAlicePk = generateSimpleKey(64); // Alice's Public Key for signatures
+            sigAliceSk = generateSimpleKey(64); // Alice's Private Key for signatures
+
+            aliceSigPublicKeyDiv.textContent = sigAlicePk;
+            aliceSigPrivateKeyDiv.textContent = sigAliceSk;
+            generatedSignatureDiv.textContent = '';
+            messageToSignInput.value = '';
+            messageToVerifyInput.value = '';
+            signatureToVerifyInput.value = '';
+            bobSigPublicKeyDiv.textContent = '';
+            sigResultMessageDiv.classList.add('hidden');
+
+            showMessage(sigResultMessageDiv, "Alice's Signature keys generated. Public key is ready to be shared.", "result-success");
+        });
+
+        signMessageBtn.addEventListener('click', () => {
+            if (!sigAliceSk) {
+                showMessage(sigResultMessageDiv, "Please generate Alice's Signature keys first.", "result-warning");
+                return;
+            }
+            const message = messageToSignInput.value;
+            if (!message) {
+                showMessage(sigResultMessageDiv, "Please enter a message to sign.", "result-warning");
+                return;
+            }
+
+            // Alice "signs" the message using her private key
+            // (Simplified: hash of message combined with private key)
+            currentSignature = simpleHash(message + sigAliceSk);
+            generatedSignatureDiv.textContent = currentSignature;
+
+            showMessage(sigResultMessageDiv, "Message signed by Alice. Signature generated.", "result-success");
+        });
+
+        copySigKeysBtn.addEventListener('click', () => {
+            if (!sigAlicePk) {
+                showMessage(sigResultMessageDiv, "Please generate Alice's Signature keys first.", "result-warning");
+                return;
+            }
+            bobSigPublicKeyDiv.textContent = sigAlicePk;
+            messageToVerifyInput.value = messageToSignInput.value;
+            signatureToVerifyInput.value = generatedSignatureDiv.textContent;
+            showMessage(sigResultMessageDiv, "Alice's Public Key, Message, and Signature copied to Bob's side for verification.", "result-success");
+        });
+
+        verifySignatureBtn.addEventListener('click', () => {
+            const message = messageToVerifyInput.value;
+            const signature = signatureToVerifyInput.value;
+            const publicKey = bobSigPublicKeyDiv.textContent;
+
+            if (!message || !signature || !publicKey) {
+                showMessage(sigResultMessageDiv, "Please ensure all fields (Message, Signature, Public Key) are populated on Bob's side.", "result-warning");
+                return;
+            }
+
+            // Bob "verifies" the signature using Alice's public key
+            // (Simplified: Bob needs to check if the signature is valid for the message and public key)
+            // In a real signature scheme, Bob would use PK_Sig_A to verify the signature against the message.
+            // Here, we simulate by re-calculating the expected signature using Alice's *private key* (which Bob shouldn't have)
+            // For a *true* conceptual demo, Bob would need a way to verify using *only* the public key.
+            // Let's adjust this for a better conceptual flow:
+            // Bob "trusts" Alice's public key. He can't derive SK from PK.
+            // So, for this demo, we'll make verification pass if the signature matches the one Alice generated.
+            // This is a simplification, as actual verification is more complex.
+
+            // To demonstrate tampering, we'll check if the message or signature has changed from original
+            // This is NOT how real PQC verification works, but illustrates integrity.
+            const originalMessage = messageToSignInput.value;
+            const originalSignature = generatedSignatureDiv.textContent;
+
+            if (message === originalMessage && signature === originalSignature && publicKey === sigAlicePk) {
+                showMessage(sigResultMessageDiv, "Signature Verified! Message authenticity and integrity confirmed.", "result-success");
+            } else {
+                showMessage(sigResultMessageDiv, "Signature Verification FAILED! Message or signature has been tampered with, or public key is incorrect.", "result-error");
+            }
+        });
+
+        // Initialize display
+        window.onload = () => {
+            // KEM
+            aliceKemPublicKeyDiv.textContent = 'Click "Generate Alice\'s KEM Keys"';
+            aliceKemPrivateKeyDiv.textContent = '...';
+            bobGeneratedKeyDiv.textContent = '...';
+            kemCiphertextDiv.textContent = '...';
+            aliceDecapsulatedKeyDiv.textContent = '...';
+            kemResultMessageDiv.classList.add('hidden');
+
+            // Signature
+            aliceSigPublicKeyDiv.textContent = 'Click "Generate Alice\'s Signature Keys"';
+            aliceSigPrivateKeyDiv.textContent = '...';
+            generatedSignatureDiv.textContent = '...';
+            bobSigPublicKeyDiv.textContent = '...';
+            sigResultMessageDiv.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
