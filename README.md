@@ -1,4 +1,4 @@
-# Conceptual Quantum-Resistant Cryptography (PQC) Demo
+# Conceptual Quantum-Resistant Cryptography (PQC) Demonstration
 
 This repository contains a simple, interactive web-based demonstration of the **workflow** of two fundamental types of Quantum-Resistant Cryptography (PQC) algorithms: a Key Encapsulation Mechanism (KEM) and a Digital Signature Scheme. These algorithms are designed to run on classical computers but are mathematically resistant to attacks from future quantum computers.
 
